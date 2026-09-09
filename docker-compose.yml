@@ -1,0 +1,163 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: filetools
+      POSTGRES_USER: filetools
+      POSTGRES_PASSWORD: filetools
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U filetools -d filetools"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    ports:
+      - "${API_PORT:-3001}:3001"
+    environment:
+      DATABASE_URL: postgresql://filetools:filetools@postgres:5432/filetools
+      REDIS_URL: redis://redis:6379
+      STORAGE_PATH: /data
+      MAX_FILE_SIZE: 104857600
+      JOB_TTL: 3600
+      API_PORT: 3001
+      WEB_PORT: ${WEB_PORT:-3000}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+    volumes:
+      - jobdata:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3001/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.web
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+    depends_on:
+      api:
+        condition: service_healthy
+
+  image-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.image-worker
+    environment:
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://filetools:filetools@postgres:5432/filetools
+      STORAGE_PATH: /data
+      WORKER_CONCURRENCY: 2
+    volumes:
+      - jobdata:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  pdf-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.pdf-worker
+    environment:
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://filetools:filetools@postgres:5432/filetools
+      STORAGE_PATH: /data
+      WORKER_CONCURRENCY: 2
+    volumes:
+      - jobdata:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  media-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.media-worker
+    environment:
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://filetools:filetools@postgres:5432/filetools
+      STORAGE_PATH: /data
+      WORKER_CONCURRENCY: 1
+    volumes:
+      - jobdata:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  archive-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.archive-worker
+    environment:
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://filetools:filetools@postgres:5432/filetools
+      STORAGE_PATH: /data
+      WORKER_CONCURRENCY: 1
+    volumes:
+      - jobdata:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  document-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.document-worker
+    environment:
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://filetools:filetools@postgres:5432/filetools
+      STORAGE_PATH: /data
+      WORKER_CONCURRENCY: 1
+    volumes:
+      - jobdata:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  redisdata:
+  jobdata:

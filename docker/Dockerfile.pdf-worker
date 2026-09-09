@@ -1,0 +1,58 @@
+FROM node:20-alpine AS base
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+RUN apk add --no-cache poppler-utils ghostscript qpdf
+WORKDIR /app
+
+FROM base AS deps
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml* ./
+COPY packages/types/package.json packages/types/
+COPY packages/config/package.json packages/config/
+COPY packages/shared/package.json packages/shared/
+COPY packages/database/package.json packages/database/
+COPY workers/pdf-worker/package.json workers/pdf-worker/
+RUN pnpm install --frozen-lockfile 2>/dev/null || pnpm install
+
+FROM base AS builder
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/packages/types/node_modules ./packages/types/node_modules
+COPY --from=deps /app/packages/config/node_modules ./packages/config/node_modules
+COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
+COPY --from=deps /app/packages/database/node_modules ./packages/database/node_modules
+COPY --from=deps /app/workers/pdf-worker/node_modules ./workers/pdf-worker/node_modules
+COPY tsconfig.base.json ./
+COPY packages/types ./packages/types
+COPY packages/config ./packages/config
+COPY packages/shared ./packages/shared
+COPY packages/database ./packages/database
+COPY workers/pdf-worker ./workers/pdf-worker
+RUN pnpm --filter @filetools/types build
+RUN pnpm --filter @filetools/config build
+RUN pnpm --filter @filetools/shared build
+RUN pnpm --filter @filetools/pdf-worker build
+
+FROM base AS runner
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+RUN apk add --no-cache poppler-utils ghostscript qpdf
+RUN pip install --break-system-packages img2pdf 2>/dev/null || apk add --no-cache py3-pip && pip install --break-system-packages img2pdf
+WORKDIR /app
+ENV NODE_ENV=production
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/packages/types/node_modules ./packages/types/node_modules
+COPY --from=deps /app/packages/config/node_modules ./packages/config/node_modules
+COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
+COPY --from=deps /app/packages/database/node_modules ./packages/database/node_modules
+COPY --from=deps /app/workers/pdf-worker/node_modules ./workers/pdf-worker/node_modules
+COPY --from=builder /app/packages/types/dist ./packages/types/dist
+COPY --from=builder /app/packages/config/dist ./packages/config/dist
+COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
+COPY --from=builder /app/packages/database/dist ./packages/database/dist
+COPY --from=builder /app/workers/pdf-worker/dist ./workers/pdf-worker/dist
+COPY --from=builder /app/workers/pdf-worker/package.json ./workers/pdf-worker/
+COPY --from=builder /app/packages/types/package.json ./packages/types/
+COPY --from=builder /app/packages/config/package.json ./packages/config/
+COPY --from=builder /app/packages/shared/package.json ./packages/shared/
+COPY --from=builder /app/packages/database/package.json ./packages/database/
+COPY --from=builder /app/package.json ./
+
+CMD ["node", "workers/pdf-worker/dist/index.js"]

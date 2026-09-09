@@ -1,0 +1,18 @@
+# FileTools API service
+# Install: sudo cp filetools-api.service /etc/systemd/system/
+#          sudo systemctl daemon-reload && sudo systemctl enable --now filetools-api
+[Unit]
+Description=FileTools API
+After=network.target postgresql.service redis-server.service
+
+[Service]
+Type=simple
+User=__USER__
+WorkingDirectory=__PROJECT_DIR__
+EnvironmentFile=/etc/filetools/filetools.env
+ExecStart=/usr/bin/pnpm --filter @filetools/api start
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

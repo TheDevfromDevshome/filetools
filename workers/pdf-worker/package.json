@@ -1,0 +1,32 @@
+{
+  "name": "@filetools/pdf-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@filetools/config": "workspace:*",
+    "@filetools/shared": "workspace:*",
+    "@filetools/types": "workspace:*",
+    "@filetools/database": "workspace:*",
+    "drizzle-orm": "^0.38.0",
+    "bullmq": "^5.30.0",
+    "ioredis": "^5.4.0",
+    "pino": "^9.5.0",
+    "pino-pretty": "^13.0.0",
+    "mime-types": "^2.1.35",
+    "pdf-lib": "^1.17.1",
+    "sharp": "^0.33.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/mime-types": "^2.1.4",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

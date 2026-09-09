@@ -1,0 +1,21 @@
+# FileTools worker service (template).
+# Usage: sudo systemctl enable --now filetools-worker@image
+#        sudo systemctl enable --now filetools-worker@pdf
+#        sudo systemctl enable --now filetools-worker@media
+#        sudo systemctl enable --now filetools-worker@archive
+#        sudo systemctl enable --now filetools-worker@document
+[Unit]
+Description=FileTools %i worker
+After=network.target redis-server.service postgresql.service
+
+[Service]
+Type=simple
+User=__USER__
+WorkingDirectory=__PROJECT_DIR__
+EnvironmentFile=/etc/filetools/filetools.env
+ExecStart=/usr/bin/pnpm --filter @filetools/%i-worker start
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

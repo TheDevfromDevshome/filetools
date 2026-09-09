@@ -1,0 +1,28 @@
+{
+  "name": "filetools",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Self-hosted file converter platform",
+  "scripts": {
+    "dev": "concurrently \"pnpm --filter @filetools/api dev\" \"pnpm --filter @filetools/web dev\" \"pnpm --filter @filetools/image-worker dev\"",
+    "dev:api": "pnpm --filter @filetools/api dev",
+    "dev:web": "pnpm --filter @filetools/web dev",
+    "dev:workers": "concurrently \"pnpm --filter @filetools/pdf-worker dev\" \"pnpm --filter @filetools/media-worker dev\" \"pnpm --filter @filetools/archive-worker dev\" \"pnpm --filter @filetools/document-worker dev\"",
+    "build": "pnpm --filter @filetools/shared build && pnpm --filter @filetools/types build && pnpm --filter @filetools/config build && pnpm --filter @filetools/database build && pnpm --filter @filetools/api build && pnpm --filter @filetools/web build",
+    "lint": "eslint \"apps/**/src/**/*.ts\" \"workers/**/src/**/*.ts\" \"packages/**/src/**/*.ts\"",
+    "typecheck": "tsc --noEmit -p apps/api/tsconfig.json && tsc --noEmit -p apps/web/tsconfig.json",
+    "db:migrate": "pnpm --filter @filetools/api db:migrate",
+    "db:generate": "pnpm --filter @filetools/api db:generate"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "typescript": "^5.7.0",
+    "eslint": "^9.15.0",
+    "@types/node": "^22.10.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.15.0"
+}

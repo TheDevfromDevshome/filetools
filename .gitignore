@@ -1,0 +1,22 @@
+node_modules/
+dist/
+.next/
+.env
+.env.local
+*.log
+.DS_Store
+data/
+coverage/
+.turbo/
+
+# local test artifacts
+downloaded.webp
+multi-download
+e2e-*.cjs
+test-image-*.png
+test-image.jpg
+test.pdf
+logs/
+*.tsbuildinfo
+.vite/
+.vite-temp/

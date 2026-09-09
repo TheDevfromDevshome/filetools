@@ -1,0 +1,19 @@
+# FileTools Web UI service
+# Install: sudo cp filetools-web.service /etc/systemd/system/
+#          sudo systemctl daemon-reload && sudo systemctl enable --now filetools-web
+[Unit]
+Description=FileTools Web UI
+After=network.target filetools-api.service
+Wants=filetools-api.service
+
+[Service]
+Type=simple
+User=__USER__
+WorkingDirectory=__PROJECT_DIR__
+EnvironmentFile=/etc/filetools/filetools.env
+ExecStart=/usr/bin/pnpm --filter @filetools/web start
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
