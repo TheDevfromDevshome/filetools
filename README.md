@@ -185,6 +185,29 @@ Interactive OpenAPI docs at `http://localhost:3001/docs` (Swagger UI):
 | `WEB_PORT` | `3000` | Web UI port |
 | `CORS_ORIGIN` | `http://localhost:3000` | Comma-separated allowed origins |
 
+## Automatic updates
+
+FileTools checks for updates automatically: once at startup and then every 6 hours
+(while the API is running). It compares the installed version against the `main`
+branch of the GitHub repository. When a newer commit exists:
+
+- The web UI shows an **"Update available"** banner with the newest commit message.
+- **Check now** forces an immediate check.
+- **Download** fetches the latest source from GitHub and unpacks it into
+  `STORAGE_PATH/updates/<commit>`.
+- **Apply** (only when the project is a git clone on `main`) pulls the new source
+  via git, runs `pnpm install && pnpm build` and then requires a restart of the
+  services.
+
+Controls via environment variables:
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `GITHUB_OWNER` | `TheDevfromDevshome` | GitHub owner/organization that hosts updates |
+| `GITHUB_REPO` | `filetools` | GitHub repository that hosts updates |
+| `GITHUB_BRANCH` | `main` | Branch to compare/download against |
+| `UPDATE_CHECK_INTERVAL` | `21600000` (6h) | How often to check for updates, in ms |
+
 ## Notes on PDF unlock ("remove password")
 
 PDFs can be protected in two ways:

@@ -30,4 +30,10 @@ export const config = {
   web: {
     port: envInt("WEB_PORT", 3000),
   },
+  updater: {
+    owner: env("GITHUB_OWNER", "TheDevfromDevshome"),
+    repo: env("GITHUB_REPO", "filetools"),
+    branch: env("GITHUB_BRANCH", "main"),
+    checkIntervalMs: envInt("UPDATE_CHECK_INTERVAL", 6 * 60 * 60 * 1000),
+  },
 } as const;

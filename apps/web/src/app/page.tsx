@@ -6,6 +6,7 @@ import { FileList } from "@/components/FileList";
 import { ToolCard } from "@/components/ToolCard";
 import { ConvertOptions } from "@/components/ConvertOptions";
 import { JobProgress } from "@/components/JobProgress";
+import UpdateBanner from "@/components/UpdateBanner";
 import {
   fetchConverters,
   uploadFiles,
@@ -156,6 +157,9 @@ export default function Home() {
         <p className="mt-3 text-lg text-gray-500 dark:text-gray-400">
           {t.headerSubtitle}
         </p>
+        <div className="mt-6">
+          <UpdateBanner />
+        </div>
         <p className="mt-1 text-sm text-gray-400 dark:text-gray-500">
           {t.headerPrivacy}
         </p>

@@ -9,10 +9,13 @@ import { jobRoutes } from "./routes/jobs.js";
 import { uploadRoutes } from "./routes/upload.js";
 import { adminRoutes } from "./routes/admin.js";
 import { setupRoutes } from "./routes/setup.js";
+import { updateRoutes } from "./routes/update.js";
 import { cleanupExpiredJobs } from "./services/cleanup.js";
+import { checkForUpdates } from "./services/updater.js";
 import { isSetupComplete, getSetting } from "./services/settings.js";
 import { startMdns } from "./services/mdns.js";
 import { db, schema } from "@filetools/database";
+import { config } from "@filetools/config";
 import { sql } from "drizzle-orm";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import path from "node:path";
@@ -95,6 +98,7 @@ async function main() {
   await app.register(uploadRoutes);
   await app.register(adminRoutes);
   await app.register(setupRoutes);
+  await app.register(updateRoutes);
 
   const cleanupInterval = setInterval(() => {
     cleanupExpiredJobs().catch((err) => {
@@ -102,8 +106,16 @@ async function main() {
     });
   }, 60_000);
 
+  const UPDATE_CHECK_INTERVAL_MS = config.updater.checkIntervalMs;
+  const updateInterval = setInterval(() => {
+    checkForUpdates()
+      .then((s) => app.log.info(`Update check: ${s.state}`))
+      .catch((err) => app.log.error({ err }, "Update check failed"));
+  }, UPDATE_CHECK_INTERVAL_MS);
+
   const shutdown = async () => {
     clearInterval(cleanupInterval);
+    clearInterval(updateInterval);
     await app.close();
     process.exit(0);
   };
@@ -117,6 +129,9 @@ async function main() {
 
     if (await isSetupComplete()) {
       startMdns().catch(() => {});
+      checkForUpdates()
+        .then((s) => app.log.info(`Update check on startup: ${s.state}`))
+        .catch((err) => app.log.error({ err }, "Update check on startup failed"));
     }
   } catch (err) {
     app.log.error(err);

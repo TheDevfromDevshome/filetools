@@ -42,6 +42,15 @@ interface TranslationStrings {
   total: string;
   size: string;
   categoryTitle: string;
+  updateAvailable: string;
+  updateUpToDate: string;
+  updateCheckError: string;
+  updateNotConfigured: string;
+  updateNow: string;
+  updateDownloading: string;
+  updateApplying: string;
+  updateApplied: string;
+  updateRestart: string;
 }
 
 const translations: Record<Lang, TranslationStrings> = {
@@ -86,6 +95,15 @@ const translations: Record<Lang, TranslationStrings> = {
     total: "Total:",
     size: "Size",
     categoryTitle: "Tools",
+    updateAvailable: "Update available",
+    updateUpToDate: "FileTools is up to date",
+    updateCheckError: "Update check failed",
+    updateNotConfigured: "Updates not configured (set GITHUB_OWNER / GITHUB_REPO)",
+    updateNow: "Check now",
+    updateDownloading: "Downloading update...",
+    updateApplying: "Applying update...",
+    updateApplied: "Update applied",
+    updateRestart: "Restart the services to use the new version.",
   },
   de: {
     headerTitle1: "Datei",
@@ -128,6 +146,15 @@ const translations: Record<Lang, TranslationStrings> = {
     total: "Gesamt:",
     size: "Größe",
     categoryTitle: "Werkzeuge",
+    updateAvailable: "Update verfügbar",
+    updateUpToDate: "FileTools ist aktuell",
+    updateCheckError: "Update-Check fehlgeschlagen",
+    updateNotConfigured: "Updates nicht konfiguriert (GITHUB_OWNER / GITHUB_REPO setzen)",
+    updateNow: "Jetzt prüfen",
+    updateDownloading: "Update wird heruntergeladen...",
+    updateApplying: "Update wird angewendet...",
+    updateApplied: "Update angewendet",
+    updateRestart: "Dienste neu starten, um die neue Version zu nutzen.",
   },
 };
 
