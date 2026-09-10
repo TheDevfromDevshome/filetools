@@ -8,7 +8,7 @@
     "dev:api": "pnpm --filter @filetools/api dev",
     "dev:web": "pnpm --filter @filetools/web dev",
     "dev:workers": "concurrently \"pnpm --filter @filetools/pdf-worker dev\" \"pnpm --filter @filetools/media-worker dev\" \"pnpm --filter @filetools/archive-worker dev\" \"pnpm --filter @filetools/document-worker dev\"",
-    "build": "pnpm --filter @filetools/shared build && pnpm --filter @filetools/types build && pnpm --filter @filetools/config build && pnpm --filter @filetools/database build && pnpm --filter @filetools/api build && pnpm --filter @filetools/web build",
+    "build": "pnpm --filter @filetools/types build && pnpm --filter @filetools/config build && pnpm --filter @filetools/database build && pnpm --filter @filetools/shared build && pnpm --filter @filetools/api build && pnpm --filter @filetools/web build",
     "lint": "eslint \"apps/**/src/**/*.ts\" \"workers/**/src/**/*.ts\" \"packages/**/src/**/*.ts\"",
     "typecheck": "tsc --noEmit -p apps/api/tsconfig.json && tsc --noEmit -p apps/web/tsconfig.json",
     "db:migrate": "pnpm --filter @filetools/api db:migrate",
