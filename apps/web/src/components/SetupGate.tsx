@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { SetupWizard } from "./SetupWizard";
 import { LangProvider, type Lang } from "@/lib/i18n";
+import { getApiUrl } from "@/lib/api-url";
 
-const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001").trim();
+const API_URL = getApiUrl();
 
 export function SetupGate({ children }: { children: React.ReactNode }) {
   const [checking, setChecking] = useState(true);

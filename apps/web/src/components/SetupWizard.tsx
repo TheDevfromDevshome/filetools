@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import type { Lang } from "@/lib/i18n";
+import { getApiUrl } from "@/lib/api-url";
 
-const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001").trim();
+const API_URL = getApiUrl();
 
 export function SetupWizard({ onComplete }: { onComplete: (lang: Lang) => void }) {
   const [step, setStep] = useState<"lang" | "domain">("lang");

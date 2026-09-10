@@ -168,10 +168,13 @@ Custom ports/domain via environment variables **before** `docker compose up`:
 ```bash
 export WEB_PORT=8080
 export API_PORT=3001
-export NEXT_PUBLIC_API_URL=http://localhost:3001
 export CORS_ORIGIN=http://localhost:8080
 docker compose up -d --build
 ```
+
+> The web UI automatically detects the server hostname from `window.location`, so
+> `NEXT_PUBLIC_API_URL` is only needed when the API is on a completely different host.
+> In most setups you can omit it.
 
 > Docker does not publish mDNS by default; use the published port or run with `network_mode: host` on Linux if you need `.local` discovery.
 
@@ -230,7 +233,7 @@ Interactive OpenAPI docs at `http://localhost:3001/docs` (Swagger UI):
 | `JOB_TTL` | `3600` | Result retention in seconds |
 | `API_PORT` | `3001` | API port |
 | `WEB_PORT` | `3000` | Web UI port |
-| `CORS_ORIGIN` | `http://localhost:3000` | Comma-separated allowed origins |
+| `CORS_ORIGIN` | *(empty — allows all)* | Comma-separated allowed origins (empty = allow all; set to restrict) |
 
 ## Automatic updates
 

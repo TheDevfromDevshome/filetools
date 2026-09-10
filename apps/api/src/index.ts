@@ -22,11 +22,12 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const PORT = parseInt(process.env.API_PORT ?? "3001", 10);
-const CORS_ORIGIN_RAW = process.env.CORS_ORIGIN ?? "http://localhost:3000";
-const CORS_ORIGINS = CORS_ORIGIN_RAW.split(",").map((o) => o.trim());
+const CORS_ORIGIN_RAW = process.env.CORS_ORIGIN;
+const CORS_ORIGINS = CORS_ORIGIN_RAW ? CORS_ORIGIN_RAW.split(",").map((o) => o.trim()) : [];
 
 async function isOriginAllowed(origin: string | undefined): Promise<boolean> {
   if (!origin) return true; // no origin = server-to-server
+  if (CORS_ORIGINS.length === 0) return true; // self-hosted: allow all when not restricted
   if (CORS_ORIGINS.includes(origin)) return true;
   const domain = await getSetting("domainName");
   if (domain) {
