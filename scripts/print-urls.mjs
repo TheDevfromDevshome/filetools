@@ -15,10 +15,16 @@ const apiPort = getArg("--api-port") ?? process.env.API_PORT ?? "3001";
 
 const nets = os.networkInterfaces();
 const ips = new Set();
+const apipa = new Set();
 for (const name of Object.keys(nets)) {
   for (const net of nets[name] ?? []) {
     if (net.family === "IPv4" && !net.internal) {
-      ips.add(net.address);
+      // 169.254.x.x = APIPA: auto-assigned when no DHCP/DNS is available
+      if (net.address.startsWith("169.254.")) {
+        apipa.add(net.address);
+      } else {
+        ips.add(net.address);
+      }
     }
   }
 }
@@ -29,13 +35,25 @@ const line = (host, port, label) => {
 };
 
 console.log("");
-console.log("FileTools is reachable from this machine/network at:");
+if (ips.size === 0) {
+  console.log("FileTools is running, but I could not find a usable LAN IP on this");
+  console.log("machine. Only localhost is reachable right now:");
+} else {
+  console.log("FileTools is reachable from this machine/network at:");
+}
 for (const ip of ips) {
   console.log(line(ip, webPort, `Web (${ip})`));
   console.log(line(ip, apiPort, `API (${ip})`));
 }
 console.log(line("localhost", webPort, "Web (local)"));
 console.log(line("localhost", apiPort, "API (local)"));
+if (apipa.size > 0) {
+  console.log("");
+  console.log("Found APIPA/self-assigned address(es) " + [...apipa].join(", ") + " —");
+  console.log("this usually means the device got NO IP from DHCP (no router / offline).");
+  console.log("Give the machine a proper network connection or a static IP to be");
+  console.log("reachable from other devices.");
+}
 console.log("");
 console.log("  mDNS      http://filetools.local:3000  (after first-run setup)");
 console.log("");

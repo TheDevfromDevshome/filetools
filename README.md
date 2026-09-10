@@ -72,7 +72,9 @@ wizard: choose **English/Deutsch** and a local domain (`filetools.local`,
 reachable at `http://<domain>:3000` and advertised on the network via mDNS.
 
 On a **server**, open `http://<server-ip>:3000`. The start scripts print every
-reachable address (LAN IPs, localhost, API) and a firewall hint — e.g.:
+reachable address **actually configured on this machine** (LAN IPs, localhost,
+API) plus a firewall hint. The IP is not fixed — it is read live from the OS at
+startup, so it always matches the current network:
 
 ```
 $ ./scripts/start.sh
@@ -81,6 +83,16 @@ FileTools is reachable from this machine/network at:
   API (192.168.1.50)  http://192.168.1.50:3001
   mDNS                http://filetools.local:3000  (after first-run setup)
 ```
+
+The address shown is whatever IP the device has right now (DHCP can change it).
+You can also find it manually:
+
+- Linux: `hostname -I` or `ip -4 addr`
+- macOS: `ipconfig getifaddr en0`
+- Windows: `ipconfig` (look under your adapter) 
+
+If the machine has no LAN IP (no network, or only a VPN), the output only lists
+`localhost` — then there is nothing else to reach it by on the network.
 
 If a remote device cannot reach `http://<server-ip>:3000`, allow the ports in
 the firewall (`sudo ufw allow 3000/tcp && sudo ufw allow 3001/tcp`).
