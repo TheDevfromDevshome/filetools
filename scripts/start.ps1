@@ -38,6 +38,10 @@ Start-Proc "document-worker" "@filetools/document-worker" { pnpm --filter @filet
 
 Write-Host ""
 Write-Host "FileTools is up!" -ForegroundColor Cyan
-Write-Host "  Open:  http://localhost:3000" 
+Write-Host "  Open:  http://localhost:3000"
 Write-Host "  API:   http://localhost:3001/docs"
 Write-Host "  Stop:  .\scripts\stop.ps1"
+Write-Host ""
+Write-Host "Reachable from this machine/network at:" -ForegroundColor Cyan
+node "$Root\scripts\print-urls.mjs" 2>$null
+Write-Host ""

@@ -39,6 +39,7 @@ for w in image pdf media archive document; do
 done
 
 echo "All services started. Press Ctrl+C to stop all."
+node "$PROJECT_DIR/scripts/print-urls.mjs"
 
 # Keep running
 while true; do

@@ -7,6 +7,11 @@ echo Starting FileTools...
 echo   API            http://localhost:3001/docs
 echo   Web            http://localhost:3000
 echo   (first visit = setup wizard: language + domain)
+echo.
+
+rem ---- Print reachable URLs (LAN IPs) ----
+node "scripts\print-urls.mjs" 2>nul || echo   (run: node scripts\print-urls.mjs to see all addresses)
+echo.
 
 set WORKER_CONCURRENCY=2
 

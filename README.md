@@ -71,6 +71,20 @@ wizard: choose **English/Deutsch** and a local domain (`filetools.local`,
 `converter.local`, or a custom name like `mybox.local`). After saving, the app is
 reachable at `http://<domain>:3000` and advertised on the network via mDNS.
 
+On a **server**, open `http://<server-ip>:3000`. The start scripts print every
+reachable address (LAN IPs, localhost, API) and a firewall hint — e.g.:
+
+```
+$ ./scripts/start.sh
+FileTools is reachable from this machine/network at:
+  Web (192.168.1.50)  http://192.168.1.50:3000
+  API (192.168.1.50)  http://192.168.1.50:3001
+  mDNS                http://filetools.local:3000  (after first-run setup)
+```
+
+If a remote device cannot reach `http://<server-ip>:3000`, allow the ports in
+the firewall (`sudo ufw allow 3000/tcp && sudo ufw allow 3001/tcp`).
+
 ## Installation (bare metal)
 
 ### Windows
