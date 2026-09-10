@@ -14,6 +14,29 @@ fi
 echo "Starting FileTools..."
 echo "  logs -> $LOG_DIR"
 
+# ---- Warn if the build (dist/) is missing or older than the sources ----
+STALE=0
+for d in apps/api packages/types packages/config packages/database packages/shared \
+         workers/image-worker workers/pdf-worker workers/media-worker workers/archive-worker workers/document-worker; do
+  pkg="$PROJECT_DIR/$d"
+  [[ -d "$pkg" ]] || continue
+  entry="$pkg/dist/index.js"
+  if [[ ! -f "$entry" ]]; then
+    echo "  [warn] $d has no dist/ — not built yet" >&2
+    STALE=1
+  elif [[ -n "$(find "$pkg/src" -type f -newer "$entry" 2>/dev/null)" ]]; then
+    echo "  [warn] $d sources are newer than dist/ — build is outdated" >&2
+    STALE=1
+  fi
+done
+if [[ "$STALE" == "1" ]]; then
+  echo "" >&2
+  echo "  The installed build is OUTDATED. Run this first:" >&2
+  echo "    pnpm build" >&2
+  echo "  (or re-run ./scripts/install.sh) and then start again." >&2
+  exit 1
+fi
+
 cleanup() {
   [[ -n "${CLEANUP_DONE:-}" ]] && return
   CLEANUP_DONE=1

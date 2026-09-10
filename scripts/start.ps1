@@ -12,6 +12,30 @@ New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 Write-Host "Starting FileTools..." -ForegroundColor Cyan
 Write-Host "  logs -> $logDir"
 
+$stale = @()
+$dists = @(
+  "apps\api", "packages\types", "packages\config", "packages\database", "packages\shared",
+  "workers\image-worker", "workers\pdf-worker", "workers\media-worker", "workers\archive-worker", "workers\document-worker"
+)
+foreach ($d in $dists) {
+  $entry = Join-Path $Root "$d\dist\index.js"
+  if (-not (Test-Path $entry)) {
+    $stale += "$d (no dist\index.js)"
+  } else {
+    $latest = Get-ChildItem -Recurse -File (Join-Path $Root "$d\src") -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+    if ($latest -and $latest.LastWriteTime -gt (Get-Item $entry).LastWriteTime) {
+      $stale += "$d (sources newer than dist)"
+    }
+  }
+}
+if ($stale.Count -gt 0) {
+  Write-Host "" -ForegroundColor DarkYellow
+  Write-Host "  Build is OUTDATED:" -ForegroundColor DarkYellow
+  foreach ($s in $stale) { Write-Host "    $s" -ForegroundColor DarkYellow }
+  Write-Host "  Run 'pnpm build' first (or re-run .\scripts\install.ps1), then start again." -ForegroundColor DarkYellow
+  exit 1
+}
+
 function Start-Proc([string]$Name, [string]$Filter, [scriptblock]$Cmd) {
   $existing = Get-CimInstance Win32_Process -Filter "Name='node.exe'" | Where-Object { $_.CommandLine -like "*$Filter*" }
   if ($existing) {
