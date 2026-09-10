@@ -6,6 +6,10 @@ PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOG_DIR="$PROJECT_DIR/logs"
 mkdir -p "$LOG_DIR"
 
+# Read ports from environment (same defaults as the app)
+WEB_PORT="${WEB_PORT:-3000}"
+API_PORT="${API_PORT:-3001}"
+
 if ! command -v pnpm >/dev/null 2>&1; then
   echo "pnpm not found — run ./scripts/install.sh first." >&2
   exit 1
@@ -13,6 +17,58 @@ fi
 
 echo "Starting FileTools..."
 echo "  logs -> $LOG_DIR"
+
+# ---- Open the web/API ports in the firewall automatically (best effort) ----
+open_firewall() {
+  local tool=""
+  if command -v ufw >/dev/null 2>&1; then
+    tool="ufw"
+  elif command -v firewall-cmd >/dev/null 2>&1; then
+    tool="firewalld"
+  elif command -v iptables >/dev/null 2>&1; then
+    tool="iptables"
+  fi
+
+  if [[ -z "$tool" ]]; then
+    echo "  [fw]   no ufw/firewalld/iptables found — open ports $WEB_PORT/$API_PORT manually if needed" >&2
+    return
+  fi
+
+  if [[ "$(id -u)" != "0" && "$tool" == "ufw" ]]; then
+    echo "  [fw]   ufw requires root — run 'sudo $0' or do: sudo ufw allow $WEB_PORT/tcp && sudo ufw allow $API_PORT/tcp" >&2
+    return
+  fi
+
+  case "$tool" in
+    ufw)
+      ufw allow "$WEB_PORT/tcp" >/dev/null 2>&1 && echo "  [fw]   ufw: port $WEB_PORT/tcp opened"
+      ufw allow "$API_PORT/tcp" >/dev/null 2>&1 && echo "  [fw]   ufw: port $API_PORT/tcp opened"
+      ;;
+    firewalld)
+      for port in "$WEB_PORT" "$API_PORT"; do
+        if ! firewall-cmd --query-port="$port/tcp" >/dev/null 2>&1; then
+          firewall-cmd --permanent --add-port="$port/tcp" >/dev/null 2>&1 && \
+            firewall-cmd --reload >/dev/null 2>&1 && \
+            echo "  [fw]   firewalld: port $port/tcp opened"
+        fi
+      done
+      ;;
+    iptables)
+      for port in "$WEB_PORT" "$API_PORT"; do
+        if [[ "$(id -u)" == "0" ]]; then
+          if ! iptables -C INPUT -p tcp --dport "$port" -j ACCEPT 2>/dev/null; then
+            iptables -I INPUT -p tcp --dport "$port" -j ACCEPT
+            echo "  [fw]   iptables: port $port/tcp opened (runtime only)"
+          fi
+        else
+          echo "  [fw]   iptables requires root — run 'sudo $0' or add rules manually" >&2
+        fi
+      done
+      ;;
+  esac
+}
+
+open_firewall
 
 # ---- Warn if the build (dist/) is missing or older than the sources ----
 STALE=0
