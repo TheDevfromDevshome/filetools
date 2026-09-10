@@ -43,6 +43,7 @@ open_firewall() {
     ufw)
       ufw allow "$WEB_PORT/tcp" >/dev/null 2>&1 && echo "  [fw]   ufw: port $WEB_PORT/tcp opened"
       ufw allow "$API_PORT/tcp" >/dev/null 2>&1 && echo "  [fw]   ufw: port $API_PORT/tcp opened"
+      ufw allow 5353/udp >/dev/null 2>&1 && echo "  [fw]   ufw: port 5353/udp opened (mDNS)"
       ;;
     firewalld)
       for port in "$WEB_PORT" "$API_PORT"; do
@@ -52,6 +53,11 @@ open_firewall() {
             echo "  [fw]   firewalld: port $port/tcp opened"
         fi
       done
+      if ! firewall-cmd --query-port=5353/udp >/dev/null 2>&1; then
+        firewall-cmd --permanent --add-port=5353/udp >/dev/null 2>&1 && \
+          firewall-cmd --reload >/dev/null 2>&1 && \
+          echo "  [fw]   firewalld: port 5353/udp opened (mDNS)"
+      fi
       ;;
     iptables)
       for port in "$WEB_PORT" "$API_PORT"; do
@@ -64,6 +70,13 @@ open_firewall() {
           echo "  [fw]   iptables requires root — run 'sudo $0' or add rules manually" >&2
         fi
       done
+      # mDNS multicast
+      if [[ "$(id -u)" == "0" ]]; then
+        if ! iptables -C INPUT -p udp --dport 5353 -j ACCEPT 2>/dev/null; then
+          iptables -I INPUT -p udp --dport 5353 -j ACCEPT
+          echo "  [fw]   iptables: port 5353/udp opened (mDNS, runtime only)"
+        fi
+      fi
       ;;
   esac
 }

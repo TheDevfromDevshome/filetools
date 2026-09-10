@@ -10,7 +10,6 @@ const execFileAsync = promisify(execFile);
 const OWNER = config.updater.owner;
 const REPO = config.updater.repo;
 const BRANCH = config.updater.branch;
-const API_BASE = `https://api.github.com/repos/${OWNER}/${REPO}`;
 const STORAGE_PATH = path.resolve(process.env.STORAGE_PATH ?? "./data");
 
 export interface UpdateStatus {
@@ -86,24 +85,34 @@ export async function checkForUpdates(): Promise<UpdateStatus> {
   }
 
   try {
-    const res = await fetch(`${API_BASE}/commits/${BRANCH}`, {
-      headers: {
-        "User-Agent": "filetools-updater",
-        Accept: "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28",
-      },
-    });
-    if (!res.ok) throw new Error(`GitHub API responded with ${res.status}`);
-    const data = (await res.json()) as {
-      sha: string;
-      commit: { message: string; author: { date: string } };
-      html_url: string;
-    };
+    const { stdout } = await execFileAsync(
+      "git",
+      ["ls-remote", "origin", BRANCH],
+      { timeout: 15_000 },
+    );
+    const latestSha = stdout.trim().split(/\s+/)[0];
+    if (!latestSha || latestSha.length < 7) {
+      throw new Error("Could not parse SHA from git ls-remote");
+    }
 
-    const latestSha = data.sha;
-    const message = data.commit.message.split("\n")[0] ?? "Update available";
-    const publishedAt = data.commit.author.date;
-    const url = data.html_url;
+    // Fetch commit info from git (works even when GitHub API is unreachable)
+    let message = "Update available";
+    let publishedAt = "";
+    let url = "";
+    try {
+      const { stdout: logOut } = await execFileAsync(
+        "git",
+        ["log", "--format=%s%n%aI%n%h", `-1`, latestSha],
+        { timeout: 10_000 },
+      );
+      const [logMsg, logDate, logHash] = logOut.trim().split("\n");
+      if (logMsg) message = logMsg;
+      if (logDate) publishedAt = logDate;
+      if (logHash) url = `https://github.com/${OWNER}/${REPO}/commit/${latestSha}`;
+    } catch {
+      // git log failed (shallow clone / detached HEAD) — use ls-remote data only
+      url = `https://github.com/${OWNER}/${REPO}/commit/${latestSha}`;
+    }
 
     await setSetting("updater:latestSha", latestSha);
     await setSetting("updater:message", message);
