@@ -15,17 +15,22 @@ echo "Starting FileTools..."
 echo "  logs -> $LOG_DIR"
 
 cleanup() {
+  [[ -n "${CLEANUP_DONE:-}" ]] && return
+  CLEANUP_DONE=1
+  echo ""
   echo "Stopping all services..."
-  kill "$(cat "$LOG_DIR/api.pid")" 2>/dev/null || true
-  kill "$(cat "$LOG_DIR/web.pid")" 2>/dev/null || true
-  for w in image pdf media archive document; do
-    kill "$(cat "$LOG_DIR/$w-worker.pid")" 2>/dev/null || true
+  for p in api web image-worker pdf-worker media-worker archive-worker document-worker; do
+    if [[ -f "$LOG_DIR/$p.pid" ]]; then
+      kill "$(cat "$LOG_DIR/$p.pid")" 2>/dev/null || true
+    fi
   done
   rm -f "$LOG_DIR"/*.pid
   echo "Stopped."
 }
 
-trap cleanup EXIT INT TERM
+trap 'cleanup; exit 130' INT
+trap 'cleanup; exit 143' TERM
+trap cleanup EXIT
 
 # API
 (cd "$PROJECT_DIR" && pnpm --filter @filetools/api start >"$LOG_DIR/api.log" 2>&1 & echo $! > "$LOG_DIR/api.pid")
