@@ -32,6 +32,7 @@ else
   sudo apt-get install -y curl git build-essential \
     postgresql postgresql-contrib redis-server \
     ffmpeg qpdf ghostscript p7zip-full poppler-utils \
+    avahi-daemon \
     libreoffice && true || echo "(some packages were unavailable; the installers will tell you what FileTools needs)"
   echo "[3/5] Installing Node.js & pnpm..."
   if ! command -v node >/dev/null 2>&1; then
@@ -42,8 +43,8 @@ else
     sudo corepack enable
     sudo corepack prepare pnpm@9.15.0 --activate
   fi
-  echo "[4/5] Starting PostgreSQL & Redis..."
-  sudo systemctl enable --now postgresql redis-server || true
+  echo "[4/5] Starting PostgreSQL, Redis & Avahi..."
+  sudo systemctl enable --now postgresql redis-server avahi-daemon || true
 fi
 
 echo "[5/5] Installing JS dependencies & building..."
