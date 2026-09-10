@@ -75,11 +75,11 @@ reachable at `http://<domain>:3000` and advertised on the network via mDNS.
 
 ### Windows
 
-Open PowerShell **as Administrator** and change into the project folder
-(normally `C:\Users\<you>\Downloads\filetools` or wherever you cloned it):
+Open PowerShell **as Administrator** and clone/enter the project:
 
 ```powershell
-cd C:\Users\YOURUSERNAME\Downloads\filetools
+git clone https://github.com/TheDevfromDevshome/filetools.git
+cd filetools
 powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1
 ```
 
@@ -89,7 +89,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1
 Start everything:
 
 ```powershell
-cd C:\Users\YOURUSERNAME\Downloads\filetools
+cd filetools
 powershell -ExecutionPolicy Bypass -File .\scripts\start.ps1
 ```
 
@@ -97,15 +97,15 @@ or double-click `start-all.bat` (opens a window per service). Individual service
 `start-api.bat`, `start-web.bat`, `start-*-worker.bat`. To stop everything:
 
 ```powershell
-cd C:\Users\YOURUSERNAME\Downloads\filetools
+cd filetools
 powershell -ExecutionPolicy Bypass -File .\scripts\stop.ps1
 ```
 
 ### Linux (Debian/Ubuntu) or macOS
 
 ```bash
-cd ~/filetools
-chmod +x scripts/*.sh                     # once, needed until the files are marked executable in git
+git clone https://github.com/TheDevfromDevshome/filetools.git
+cd filetools
 ./scripts/install.sh                      # system deps (apt/brew) + Postgres/Redis + build
 ./scripts/start.sh                        # starts API + web + all 5 workers (Ctrl+C stops all)
 ```
@@ -114,8 +114,7 @@ On Linux you can install systemd units so everything runs as a service and
 auto-starts at boot:
 
 ```bash
-cd ~/filetools
-chmod +x scripts/*.sh
+cd filetools
 sudo ./scripts/install.sh --systemd
 sudo systemctl enable --now filetools-api filetools-web \
   filetools-worker@image filetools-worker@pdf filetools-worker@media \
