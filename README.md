@@ -42,17 +42,17 @@ Requirements first: **Node.js ≥ 20**, **pnpm ≥ 9**, **PostgreSQL** and **Red
 Put them into **PATH**, or set the binary paths via the env vars below (worker tools).
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/TheDevfromDevshome/filetools.git
 cd filetools
-cp .env.example .env     # optional: adjust ports/credentials, then save
+cp .env.example .env   # optional: adjust ports/credentials, then save
 pnpm install
-pnpm build               # compiles shared/packages + web + api
+pnpm build             # compiles shared/packages + web + api
 ```
 
 Then start the API, web UI and first worker:
 
 ```bash
-pnpm dev                # API (3001) + Web (3000) + image-worker
+pnpm dev               # API (3001) + Web (3000) + image-worker
 ```
 
 …and the remaining four workers (PDF, media, archive, document):
@@ -75,9 +75,11 @@ reachable at `http://<domain>:3000` and advertised on the network via mDNS.
 
 ### Windows
 
-Run PowerShell **as Administrator** from the `scripts/` folder:
+Open PowerShell **as Administrator** and change into the project folder
+(normally `C:\Users\<you>\Downloads\filetools` or wherever you cloned it):
 
 ```powershell
+cd C:\Users\YOURUSERNAME\Downloads\filetools
 powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1
 ```
 
@@ -87,25 +89,33 @@ powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1
 Start everything:
 
 ```powershell
+cd C:\Users\YOURUSERNAME\Downloads\filetools
 powershell -ExecutionPolicy Bypass -File .\scripts\start.ps1
 ```
 
 or double-click `start-all.bat` (opens a window per service). Individual services
-`start-api.bat`, `start-web.bat`, `start-*-worker.bat`. To stop:
-`.\scripts\stop.ps1`.
+`start-api.bat`, `start-web.bat`, `start-*-worker.bat`. To stop everything:
+
+```powershell
+cd C:\Users\YOURUSERNAME\Downloads\filetools
+powershell -ExecutionPolicy Bypass -File .\scripts\stop.ps1
+```
 
 ### Linux (Debian/Ubuntu) or macOS
 
 ```bash
-./scripts/install.sh            # system deps (apt/brew) + Postgres/Redis + build
-./scripts/start.sh              # starts API + web + all 5 workers
-# press Ctrl+C to stop everything (stop.sh is an alias for the same cleanup)
+cd ~/filetools
+chmod +x scripts/*.sh                     # once, needed until the files are marked executable in git
+./scripts/install.sh                      # system deps (apt/brew) + Postgres/Redis + build
+./scripts/start.sh                        # starts API + web + all 5 workers (Ctrl+C stops all)
 ```
 
 On Linux you can install systemd units so everything runs as a service and
 auto-starts at boot:
 
 ```bash
+cd ~/filetools
+chmod +x scripts/*.sh
 sudo ./scripts/install.sh --systemd
 sudo systemctl enable --now filetools-api filetools-web \
   filetools-worker@image filetools-worker@pdf filetools-worker@media \
@@ -119,12 +129,24 @@ sudo systemctl enable --now filetools-api filetools-web \
 ### Docker
 
 ```bash
-docker compose up -d --build
-docker compose exec api pnpm --filter @filetools/api db:migrate
+docker compose up -d --build        # builds + starts postgres, redis, api, web and all 5 workers
+docker compose ps                   # wait until api reports "healthy"
+docker compose logs -f api          # follow API logs
+docker compose down                 # stop everything (keep volumes)
+docker compose down -v              # stop and delete all data
 ```
 
-Custom ports/domain via env: `WEB_PORT=8080`, `API_PORT=3001`,
-`NEXT_PUBLIC_API_URL=http://localhost:3001`, `CORS_ORIGIN=http://localhost:8080`.
+Migrations run automatically when the API container starts — no manual step needed.
+
+Custom ports/domain via environment variables **before** `docker compose up`:
+
+```bash
+export WEB_PORT=8080
+export API_PORT=3001
+export NEXT_PUBLIC_API_URL=http://localhost:3001
+export CORS_ORIGIN=http://localhost:8080
+docker compose up -d --build
+```
 
 > Docker does not publish mDNS by default; use the published port or run with `network_mode: host` on Linux if you need `.local` discovery.
 
